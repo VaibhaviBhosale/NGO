@@ -129,7 +129,7 @@ spec:
                 container('dind') {
                     sh '''
                         echo "Tagging NGO image..."
-                        docker tag ngo:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_NGO/ngo:v1
+                        docker tag ngo:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_ngo/ngo:v1
 
                         echo "Pushing NGO image to Nexus..."
                         docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_NGO/ngo:v1
