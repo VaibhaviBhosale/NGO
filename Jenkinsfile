@@ -97,7 +97,7 @@ spec:
                         sonar-scanner \
                         -Dsonar.projectKey=2401018-Ecommerce \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=https://sonarqube.imcc.com \
+                        -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000\
                         -Dsonar.token=sqp_9bab4625da21d06e8ff026e7397361d9bfa50b7c
 
                         
