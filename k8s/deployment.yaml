@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engeo-frontend-deployment
+  namespace: 2401018
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: engeo-connect
+  template:
+    metadata:
+      labels:
+        app: engeo-connect
+    spec:
+      containers:
+        - name: engeo-connect
+          image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_NGO/ngo:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80

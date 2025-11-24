@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: engeo-frontend-deployment
+  namespace: 2401018
+spec:
+  selector:
+    app: engeo-connect
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
