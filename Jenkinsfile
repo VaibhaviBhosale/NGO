@@ -95,10 +95,10 @@ spec:
                 container('sonar-scanner') {
                     sh '''
                         sonar-scanner \
-                          -Dsonar.projectKey=2401018-NGO\
+                          -Dsonar.projectKey=2401018-Ecommerce\
                           -Dsonar.sources=.\
-                          -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000\
-                          -Dsonar.login=sqp_08597ce2ed0908d3a22170c3d5269ac22d8d7fcd
+                          -Dsonar.host.url=-Dsonar.host.url=https://sonarqube.imcc.com
+                          -Dsonar.token=sqp_9bab4625da21d06e8ff026e7397361d9bfa50b7c
                     '''
                 }
             }
