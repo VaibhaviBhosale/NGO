@@ -52,7 +52,7 @@ spec:
     stages {
     stage('Checkout') {
             steps {
-                git 'https://github.com/VaibhaviBhosale/NGO.git'
+                git 'https://github.com/VaibhaviBhosale/NGO.git',branch:'main'
             }
         }
 
