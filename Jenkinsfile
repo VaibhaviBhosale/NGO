@@ -49,62 +49,79 @@ spec:
         }
     }
 
+    // *** ADDED ***
+    environment {
+        SONAR_HOST = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
+        SONAR_AUTH = "sqp_07ea437fa90838cd7750a770a9c5306eaaece6ba"
+    }
+
     stages {
-
-        stage('Clean Workspace') {
+    stage('Checkout') {
             steps {
-                deleteDir()   // THIS WILL NOW RUN CORRECTLY
+                git url:'https://github.com/VaibhaviBhosale/NGO.git',branch:'main'
             }
         }
 
-        stage('Checkout') {
-            steps {
-                git url: 'https://github.com/VaibhaviBhosale/NGO.git', branch: 'main'
-            }
-        }
 
+        /* -------------------------
+           STATIC WEBSITE STEP
+           ------------------------- */
         stage('Prepare NGO Website') {
             steps {
                 container('node') {
                     sh '''
-                        echo "NGO static website – HTML/CSS"
+                        echo "NGO website – static HTML/CSS site"
+                        echo "Listing project files..."
                         ls -la
                     '''
                 }
             }
         }
 
+        /* -------------------------
+           DOCKER BUILD
+           ------------------------- */
         stage('Build Docker Image') {
             steps {
                 container('dind') {
-                    dir("${WORKSPACE}") {
-                        sh '''
-                            sleep 10
-                            docker info
-                            echo "=== Building NGO Docker Image ==="
-                            docker build -f Dockerfile -t ngo:latest .
-                        '''
-                    }
+                    sh '''
+                        sleep 10
+                        echo "=== Building NGO Docker Image ==="
+                        docker build -t ngo:latest .
+                    '''
                 }
             }
         }
 
+        /* -------------------------
+           SONARQUBE ANALYSIS
+           ------------------------- */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    withCredentials([string(credentialsId: 'SONAR_TOKEN_2401018', variable: 'TOKEN')]) {
-                        sh '''
-                            sonar-scanner \
-                              -Dsonar.projectKey=2401018-Ecommerce \
-                              -Dsonar.sources=. \
-                              -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                              -Dsonar.login=$TOKEN
-                        '''
-                    }
+
+                    // *** ADDED: VALIDATE REACHABILITY BEFORE RUNNING ***
+                    sh '''
+                        echo "Checking SonarQube reachability..."
+                        curl -I ${SONAR_HOST} || echo "SonarQube not reachable, but running scanner anyway."
+                    '''
+
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=2401018-Ecommerce \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${SONAR_HOST} \
+                        -Dsonar.token=${SONAR_AUTH}
+
+                        
+                    '''
                 }
             }
         }
 
+        /* -------------------------
+           DOCKER LOGIN TO NEXUS
+           ------------------------- */
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
@@ -117,6 +134,9 @@ spec:
             }
         }
 
+        /* -------------------------
+           PUSH IMAGE TO NEXUS
+           ------------------------- */
         stage('Push NGO Image to Nexus') {
             steps {
                 container('dind') {
@@ -131,10 +151,14 @@ spec:
             }
         }
 
+        /* -------------------------
+           CREATE NAMESPACE
+           ------------------------- */
         stage('Create Namespace') {
             steps {
                 container('kubectl') {
                     sh '''
+                        echo "Creating namespace 2401018 if not exists..."
                         kubectl create namespace 2401018 || echo "Namespace already exists"
                         kubectl get ns
                     '''
@@ -142,28 +166,41 @@ spec:
             }
         }
 
+        /* -------------------------
+           DEPLOY TO KUBERNETES
+           ------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
                     sh '''
                         echo "Applying NGO Kubernetes Deployment & Service..."
+
                         kubectl apply -f k8s/deployment.yaml -n 2401018
                         kubectl apply -f k8s/service.yaml -n 2401018
 
+                        echo "Checking all resources..."
                         kubectl get all -n 2401018
 
-                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
+                        echo "Waiting for rollout..."
+                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018 --timeout=120s
+ 
                     '''
                 }
             }
         }
 
-        stage('Debug Pod') {
+        /* -------------------------
+           DEBUG
+           ------------------------- */
+        stage('Debug Pods') {
             steps {
                 container('kubectl') {
                     sh '''
-                        POD=$(kubectl get pods -n 2401018 -o jsonpath="{.items[0].metadata.name}")
-                        kubectl describe pod $POD -n 2401018
+                        echo "[DEBUG] Listing Pods..."
+                        kubectl get pods -n 2401018
+
+                        echo "[DEBUG] Describe Pods..."
+                        kubectl describe pods -n 2401018 | head -n 200
                     '''
                 }
             }
