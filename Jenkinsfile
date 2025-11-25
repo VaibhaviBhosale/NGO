@@ -51,18 +51,12 @@ spec:
 
     stages {
         
-        /* -------------------------
-           GIT CHECKOUT
-        -------------------------- */
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/VaibhaviBhosale/NGO.git', branch: 'main'
             }
         }
 
-        /* -------------------------
-           STATIC WEBSITE
-        -------------------------- */
         stage('Prepare NGO Website') {
             steps {
                 container('node') {
@@ -74,14 +68,12 @@ spec:
             }
         }
 
-        /* -------------------------
-           BUILD DOCKER IMAGE
-        -------------------------- */
         stage('Build Docker Image') {
             steps {
                 container('dind') {
                     sh '''
                         sleep 10
+                        docker info
                         echo "=== Building NGO Docker Image ==="
                         docker build -t ngo:latest .
                     '''
@@ -89,9 +81,6 @@ spec:
             }
         }
 
-        /* -------------------------
-           SONARQUBE ANALYSIS (FIXED)
-        -------------------------- */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
@@ -108,9 +97,6 @@ spec:
             }
         }
 
-        /* -------------------------
-           LOGIN TO NEXUS
-        -------------------------- */
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
@@ -123,9 +109,6 @@ spec:
             }
         }
 
-        /* -------------------------
-           PUSH IMAGE TO NEXUS
-        -------------------------- */
         stage('Push NGO Image to Nexus') {
             steps {
                 container('dind') {
@@ -140,47 +123,33 @@ spec:
             }
         }
 
-        /* -------------------------
-           CREATE NAMESPACE
-        -------------------------- */
         stage('Create Namespace') {
             steps {
                 container('kubectl') {
                     sh '''
-                        echo "Creating namespace 2401018 if not exists..."
                         kubectl create namespace 2401018 || echo "Namespace already exists"
-
                         kubectl get ns
                     '''
                 }
             }
         }
 
-        /* -------------------------
-           DEPLOY TO KUBERNETES
-        -------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
                     sh '''
                         echo "Applying NGO Kubernetes Deployment & Service..."
-
                         kubectl apply -f k8s/deployment.yaml -n 2401018
                         kubectl apply -f k8s/service.yaml -n 2401018
 
-                        echo "Checking resources..."
                         kubectl get all -n 2401018
 
-                        echo "Waiting for rollout..."
                         kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
                     '''
                 }
             }
         }
 
-        /* -------------------------
-           DEBUG POD
-        -------------------------- */
         stage('Debug Pod') {
             steps {
                 container('kubectl') {
