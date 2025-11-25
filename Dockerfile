@@ -7,6 +7,9 @@ WORKDIR /usr/share/nginx/html/
 # Copy website files WITH correct ownership
 COPY --chown=nginx:nginx public/ /usr/share/nginx/html/
 
+# Remove write permissions from all copied files (important for Sonar S6504)
+RUN chmod -R a-w /usr/share/nginx/html/
+
 # Switch to non-root user to avoid SonarQube S2 warning
 USER nginx
 
