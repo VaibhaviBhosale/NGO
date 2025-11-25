@@ -169,7 +169,8 @@ spec:
                         kubectl get all -n 2401018
 
                         echo "Waiting for rollout..."
-                        kubectl rollout status deployment/engo-connect-deployment -n 2401018
+                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
+
                     '''
                 }
             }
