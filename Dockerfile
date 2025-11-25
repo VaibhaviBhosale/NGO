@@ -2,8 +2,8 @@ FROM ghcr.io/nginxinc/nginx-unprivileged:alpine
 
 WORKDIR /usr/share/nginx/html/
 
-# Copy files with read-only permissions + correct owner
-COPY --chown=nginx:nginx --chmod=444 public/ /usr/share/nginx/html/
+# Copy static files with correct owner only
+COPY --chown=nginx:nginx public/ /usr/share/nginx/html/
 
 USER nginx
 
