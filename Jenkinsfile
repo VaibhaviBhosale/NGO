@@ -1,6 +1,3 @@
-
-
-
 pipeline {
     agent {
         kubernetes {
@@ -53,11 +50,12 @@ spec:
     }
 
     stages {
+
         stage('Clean Workspace') {
-    steps {
-        deleteDir()
-    }
-}
+            steps {
+                deleteDir()   // THIS WILL NOW RUN CORRECTLY
+            }
+        }
 
         stage('Checkout') {
             steps {
@@ -77,20 +75,19 @@ spec:
         }
 
         stage('Build Docker Image') {
-    steps {
-        container('dind') {
-            dir("${WORKSPACE}") {
-                sh '''
-                    sleep 10
-                    docker info
-                    echo "=== Building NGO Docker Image ==="
-                    docker build -f Dockerfile -t ngo:latest .
-                '''
+            steps {
+                container('dind') {
+                    dir("${WORKSPACE}") {
+                        sh '''
+                            sleep 10
+                            docker info
+                            echo "=== Building NGO Docker Image ==="
+                            docker build -f Dockerfile -t ngo:latest .
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-
 
         stage('SonarQube Analysis') {
             steps {
