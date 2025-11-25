@@ -179,18 +179,15 @@ spec:
         /* -------------------------
            DEBUG
            ------------------------- */
-        stage('Debug Pods') {
-            steps {
-                container('kubectl') {
-                    sh '''
-                        echo "[DEBUG] Listing Pods..."
-                        kubectl get pods -n 2401018
+        stage('Debug Pod') {
+    steps {
+        sh '''
+            POD=$(kubectl get pods -n 2401018 -o jsonpath="{.items[0].metadata.name}")
+            kubectl describe pod $POD -n 2401018
+        '''
+    }
+}
 
-                        echo "[DEBUG] Describe Pods..."
-                        kubectl describe pods -n 2401018 | head -n 200
-                    '''
-                }
-            }
-        }
+
     }
 }
