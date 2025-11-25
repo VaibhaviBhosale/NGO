@@ -50,22 +50,24 @@ spec:
     }
 
     stages {
-    stage('Checkout') {
+        
+        /* -------------------------
+           GIT CHECKOUT
+        -------------------------- */
+        stage('Checkout') {
             steps {
-                git url:'https://github.com/VaibhaviBhosale/NGO.git',branch:'main'
+                git url: 'https://github.com/VaibhaviBhosale/NGO.git', branch: 'main'
             }
         }
 
-
         /* -------------------------
-           STATIC WEBSITE STEP
-           ------------------------- */
+           STATIC WEBSITE
+        -------------------------- */
         stage('Prepare NGO Website') {
             steps {
                 container('node') {
                     sh '''
-                        echo "NGO website – static HTML/CSS site"
-                        echo "Listing project files..."
+                        echo "NGO static website – HTML/CSS"
                         ls -la
                     '''
                 }
@@ -73,8 +75,8 @@ spec:
         }
 
         /* -------------------------
-           DOCKER BUILD
-           ------------------------- */
+           BUILD DOCKER IMAGE
+        -------------------------- */
         stage('Build Docker Image') {
             steps {
                 container('dind') {
@@ -88,27 +90,27 @@ spec:
         }
 
         /* -------------------------
-           SONARQUBE ANALYSIS
-           ------------------------- */
+           SONARQUBE ANALYSIS (FIXED)
+        -------------------------- */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=2401018-Ecommerce \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000\
-                        -Dsonar.token=sqp_9bab4625da21d06e8ff026e7397361d9bfa50b7c
-
-                        
-                    '''
+                    withCredentials([string(credentialsId: 'SONAR_TOKEN_2401018', variable: 'TOKEN')]) {
+                        sh '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=2401018-Ecommerce \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                              -Dsonar.login=$TOKEN
+                        '''
+                    }
                 }
             }
         }
 
         /* -------------------------
-           DOCKER LOGIN TO NEXUS
-           ------------------------- */
+           LOGIN TO NEXUS
+        -------------------------- */
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
@@ -123,7 +125,7 @@ spec:
 
         /* -------------------------
            PUSH IMAGE TO NEXUS
-           ------------------------- */
+        -------------------------- */
         stage('Push NGO Image to Nexus') {
             steps {
                 container('dind') {
@@ -140,13 +142,14 @@ spec:
 
         /* -------------------------
            CREATE NAMESPACE
-           ------------------------- */
+        -------------------------- */
         stage('Create Namespace') {
             steps {
                 container('kubectl') {
                     sh '''
                         echo "Creating namespace 2401018 if not exists..."
                         kubectl create namespace 2401018 || echo "Namespace already exists"
+
                         kubectl get ns
                     '''
                 }
@@ -155,7 +158,7 @@ spec:
 
         /* -------------------------
            DEPLOY TO KUBERNETES
-           ------------------------- */
+        -------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
@@ -165,29 +168,28 @@ spec:
                         kubectl apply -f k8s/deployment.yaml -n 2401018
                         kubectl apply -f k8s/service.yaml -n 2401018
 
-                        echo "Checking all resources..."
+                        echo "Checking resources..."
                         kubectl get all -n 2401018
 
                         echo "Waiting for rollout..."
                         kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
-
                     '''
                 }
             }
         }
 
         /* -------------------------
-           DEBUG
-           ------------------------- */
+           DEBUG POD
+        -------------------------- */
         stage('Debug Pod') {
-    steps {
-        sh '''
-            POD=$(kubectl get pods -n 2401018 -o jsonpath="{.items[0].metadata.name}")
-            kubectl describe pod $POD -n 2401018
-        '''
-    }
-}
-
-
+            steps {
+                container('kubectl') {
+                    sh '''
+                        POD=$(kubectl get pods -n 2401018 -o jsonpath="{.items[0].metadata.name}")
+                        kubectl describe pod $POD -n 2401018
+                    '''
+                }
+            }
+        }
     }
 }
