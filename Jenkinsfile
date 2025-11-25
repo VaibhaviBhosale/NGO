@@ -75,7 +75,7 @@ spec:
                         sleep 10
                         docker info
                         echo "=== Building NGO Docker Image ==="
-                        docker build -t ngo:latest .
+                        docker build -f Dockerfile -t ngo:latest .
                     '''
                 }
             }
