@@ -49,23 +49,37 @@ spec:
         }
     }
 
-    // *** ADDED ***
     environment {
         SONAR_HOST = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
         SONAR_AUTH = "sqp_07ea437fa90838cd7750a770a9c5306eaaece6ba"
     }
 
     stages {
-    stage('Checkout') {
+
+        /* -------------------------
+           REMOVE OLD DOCKERFILE
+           ------------------------- */
+        stage('Clean Old Workspace Dockerfile') {
             steps {
-                git url:'https://github.com/VaibhaviBhosale/NGO.git',branch:'main'
+                container('node') {
+                    sh '''
+                        echo "Deleting ALL existing Dockerfiles in Kubernetes workspace..."
+                        find . -name "Dockerfile" -type f -print -delete || true
+                        echo "Workspace cleaned."
+                    '''
+                }
             }
         }
 
-
         /* -------------------------
-           STATIC WEBSITE STEP
+           CHECKOUT
            ------------------------- */
+        stage('Checkout') {
+            steps {
+                git url:'https://github.com/VaibhaviBhosale/NGO.git', branch:'main'
+            }
+        }
+
         stage('Prepare NGO Website') {
             steps {
                 container('node') {
@@ -78,9 +92,6 @@ spec:
             }
         }
 
-        /* -------------------------
-           DOCKER BUILD
-           ------------------------- */
         stage('Build Docker Image') {
             steps {
                 container('dind') {
@@ -93,14 +104,9 @@ spec:
             }
         }
 
-        /* -------------------------
-           SONARQUBE ANALYSIS
-           ------------------------- */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-
-                    // *** ADDED: VALIDATE REACHABILITY BEFORE RUNNING ***
                     sh '''
                         echo "Checking SonarQube reachability..."
                         curl -I ${SONAR_HOST} || echo "SonarQube not reachable, but running scanner anyway."
@@ -112,16 +118,11 @@ spec:
                         -Dsonar.sources=. \
                         -Dsonar.host.url=${SONAR_HOST} \
                         -Dsonar.token=${SONAR_AUTH}
-
-                        
                     '''
                 }
             }
         }
 
-        /* -------------------------
-           DOCKER LOGIN TO NEXUS
-           ------------------------- */
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
@@ -134,9 +135,6 @@ spec:
             }
         }
 
-        /* -------------------------
-           PUSH IMAGE TO NEXUS
-           ------------------------- */
         stage('Push NGO Image to Nexus') {
             steps {
                 container('dind') {
@@ -151,14 +149,10 @@ spec:
             }
         }
 
-        /* -------------------------
-           CREATE NAMESPACE
-           ------------------------- */
         stage('Create Namespace') {
             steps {
                 container('kubectl') {
                     sh '''
-                        echo "Creating namespace 2401018 if not exists..."
                         kubectl create namespace 2401018 || echo "Namespace already exists"
                         kubectl get ns
                     '''
@@ -166,32 +160,22 @@ spec:
             }
         }
 
-        /* -------------------------
-           DEPLOY TO KUBERNETES
-           ------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
                     sh '''
                         echo "Applying NGO Kubernetes Deployment & Service..."
-
                         kubectl apply -f k8s/deployment.yaml -n 2401018
                         kubectl apply -f k8s/service.yaml -n 2401018
 
-                        echo "Checking all resources..."
                         kubectl get all -n 2401018
 
-                        echo "Waiting for rollout..."
                         kubectl rollout status deployment/engeo-frontend-deployment -n 2401018 --timeout=120s
- 
                     '''
                 }
             }
         }
 
-        /* -------------------------
-           DEBUG
-           ------------------------- */
         stage('Debug Pods') {
             steps {
                 container('kubectl') {
