@@ -1,3 +1,6 @@
+
+
+
 pipeline {
     agent {
         kubernetes {
@@ -50,7 +53,12 @@ spec:
     }
 
     stages {
-        
+        stage('Clean Workspace') {
+    steps {
+        deleteDir()
+    }
+}
+
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/VaibhaviBhosale/NGO.git', branch: 'main'
@@ -69,17 +77,20 @@ spec:
         }
 
         stage('Build Docker Image') {
-            steps {
-                container('dind') {
-                    sh '''
-                        sleep 10
-                        docker info
-                        echo "=== Building NGO Docker Image ==="
-                        docker build -f Dockerfile -t ngo:latest .
-                    '''
-                }
+    steps {
+        container('dind') {
+            dir("${WORKSPACE}") {
+                sh '''
+                    sleep 10
+                    docker info
+                    echo "=== Building NGO Docker Image ==="
+                    docker build -f Dockerfile -t ngo:latest .
+                '''
             }
         }
+    }
+}
+
 
         stage('SonarQube Analysis') {
             steps {
