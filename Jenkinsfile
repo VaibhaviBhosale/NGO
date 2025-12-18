@@ -131,5 +131,29 @@ spec:
                 }
             }
         }
+
+        stage('Verify Deployment') {
+    steps {
+        container('kubectl') {
+            sh '''
+                echo "Checking deployment rollout status..."
+                kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
+            '''
+        }
+    }
+}
+
+stage('Verify Pods') {
+    steps {
+        container('kubectl') {
+            sh '''
+                kubectl get pods -n 2401018
+            '''
+        }
+    }
+}
+
+
+
     }
 }
