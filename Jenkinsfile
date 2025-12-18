@@ -153,6 +153,16 @@ stage('Verify Pods') {
     }
 }
 
+stage('Verify Services') {
+    steps {
+        container('kubectl') {
+            sh '''
+                kubectl get svc -n 2401018
+            '''
+        }
+    }
+}
+
 
 
     }
