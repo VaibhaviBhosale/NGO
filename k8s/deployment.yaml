@@ -13,16 +13,20 @@ spec:
       labels:
         app: engeo-connect
     spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: nexus-secret
       containers:
         - name: engeo-connect
-          image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_ngo/ngo:v1
+          image: 127.0.0.1:30085/2401018_ngo/ngo:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 80
-            resources:
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
-      limits:
-        cpu: "250m"
-        memory: "256Mi"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+              ephemeral-storage: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
