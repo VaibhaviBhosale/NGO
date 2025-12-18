@@ -49,14 +49,10 @@ spec:
         }
     }
 
-  environment {
-    APP_NAME        = "engeo-frontend"          // your app name
-    IMAGE_TAG       = "v1"                       // or latest
-    REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
-    REGISTRY_REPO   = "2401018_ngo"              // your namespace/project
-    SONAR_PROJECT   = "2401018_Ecommerce"
-    SONAR_HOST_URL  = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
-}
+    environment {
+        SONAR_HOST = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
+        SONAR_AUTH = "sqp_07ea437fa90838cd7750a770a9c5306eaaece6ba"
+    }
 
     stages {
 
@@ -109,26 +105,23 @@ spec:
         }
 
         stage('SonarQube Analysis') {
-    steps {
-        container('sonar-scanner') {
-            withCredentials([
-                string(credentialsId: 'SONAR_TOKEN_ID', variable: 'SONAR_TOKEN')
-            ]) {
-                sh '''
-                    echo "Checking SonarQube reachability..."
-                    curl -I $SONAR_HOST_URL || echo "SonarQube not reachable, but running scanner anyway."
+            steps {
+                container('sonar-scanner') {
+                    sh '''
+                        echo "Checking SonarQube reachability..."
+                        curl -I ${SONAR_HOST} || echo "SonarQube not reachable, but running scanner anyway."
+                    '''
 
-                    sonar-scanner \
-                      -Dsonar.projectKey=2401018_Ecommerce \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=$SONAR_HOST_URL \
-                      -Dsonar.login=$SONAR_TOKEN
-                '''
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=2401018-Ecommerce \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${SONAR_HOST} \
+                        -Dsonar.token=${SONAR_AUTH}
+                    '''
+                }
             }
         }
-    }
-}
-
 
         stage('Login to Nexus Registry') {
             steps {
@@ -177,8 +170,7 @@ spec:
 
                         kubectl get all -n 2401018
 
-                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
-
+                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018 --timeout=120s
                     '''
                 }
             }
