@@ -109,23 +109,26 @@ spec:
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                container('sonar-scanner') {
-                    sh '''
-                        echo "Checking SonarQube reachability..."
-                        curl -I ${SONAR_HOST} || echo "SonarQube not reachable, but running scanner anyway."
-                    '''
+    steps {
+        container('sonar-scanner') {
+            withCredentials([
+                string(credentialsId: 'SONAR_TOKEN_ID', variable: 'SONAR_TOKEN')
+            ]) {
+                sh '''
+                    echo "Checking SonarQube reachability..."
+                    curl -I $SONAR_HOST_URL || echo "SonarQube not reachable, but running scanner anyway."
 
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=2401018_Ecommerce \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=${SONAR_HOST} \
-                        -Dsonar.token=${SONAR_AUTH}
-                    '''
-                }
+                    sonar-scanner \
+                      -Dsonar.projectKey=2401018_Ecommerce \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=$SONAR_HOST_URL \
+                      -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
+    }
+}
+
 
         stage('Login to Nexus Registry') {
             steps {
