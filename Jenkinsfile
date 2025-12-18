@@ -49,10 +49,14 @@ spec:
         }
     }
 
-    environment {
-        SONAR_HOST = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
-        SONAR_AUTH = "sqp_61c04d46cfa130f0aac5365fa9741cb5846c0938"
-    }
+  environment {
+    APP_NAME        = "engeo-frontend"          // your app name
+    IMAGE_TAG       = "v1"                       // or latest
+    REGISTRY_URL    = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
+    REGISTRY_REPO   = "2401018_ngo"              // your namespace/project
+    SONAR_PROJECT   = "2401018_Ecommerce"
+    SONAR_HOST_URL  = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
+}
 
     stages {
 
@@ -170,7 +174,8 @@ spec:
 
                         kubectl get all -n 2401018
 
-                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018 --timeout=120s
+                        kubectl rollout status deployment/engeo-frontend-deployment -n 2401018
+
                     '''
                 }
             }

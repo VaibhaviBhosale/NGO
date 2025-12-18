@@ -13,12 +13,17 @@ spec:
       labels:
         app: engeo-connect
     spec:
+      imagePullSecrets:
+        - name: nexus-secret   # ⚠️ DO NOT CHANGE THIS NAME
+
       containers:
         - name: engeo-connect
-          image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_ngo/ngo:v1
+          image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401018_ngo/engeo-frontend:v1
           imagePullPolicy: Always
+
           ports:
             - containerPort: 80
+
           resources:
             requests:
               cpu: "100m"
