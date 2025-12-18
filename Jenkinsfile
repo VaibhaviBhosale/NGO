@@ -163,6 +163,14 @@ stage('Verify Services') {
     }
 }
 
+stage('Get Node IP') {
+    steps {
+        container('kubectl') {
+            sh 'kubectl get nodes -o wide'
+        }
+    }
+}
+
 
 
     }
