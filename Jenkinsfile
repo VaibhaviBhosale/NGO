@@ -51,7 +51,7 @@ spec:
 
     environment {
         SONAR_HOST = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
-        SONAR_AUTH = "sqp_07ea437fa90838cd7750a770a9c5306eaaece6ba"
+        SONAR_AUTH = "sqp_61c04d46cfa130f0aac5365fa9741cb5846c0938"
     }
 
     stages {
@@ -114,7 +114,7 @@ spec:
 
                     sh '''
                         sonar-scanner \
-                        -Dsonar.projectKey=2401018-Ecommerce \
+                        -Dsonar.projectKey=2401018_Ecommerce \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=${SONAR_HOST} \
                         -Dsonar.token=${SONAR_AUTH}
