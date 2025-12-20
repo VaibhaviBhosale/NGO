@@ -174,6 +174,5 @@ stage('Get Node IP') {
 }
 
 
-
     }
 }
