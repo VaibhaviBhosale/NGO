@@ -4,11 +4,11 @@ metadata:
   name: engeo-frontend-service
   namespace: "2401018"
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: engeo-connect
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8080
-      nodePort: 31014
+      
