@@ -21,7 +21,7 @@ spec:
           image: 127.0.0.1:30085/2401018_ngo/ngo:v1
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           resources:
             requests:
               cpu: "100m"
