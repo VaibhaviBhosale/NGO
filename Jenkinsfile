@@ -123,6 +123,8 @@ spec:
 
                             kubectl apply -f deployment.yaml -n 2401018
                             kubectl apply -f service.yaml -n 2401018
+                            kubectl apply -f ingress.yaml -n 2401018
+
 
                             kubectl rollout status deployment/engeo-frontend-deployment \
                               -n 2401018 --timeout=120s
